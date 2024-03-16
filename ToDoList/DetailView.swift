@@ -18,7 +18,6 @@ struct DetailView: View {
     var passedValue: String
     
     var body: some View {
-        NavigationStack {
             List{
                 TextField("Enter To Do here", text: $toDo)
                     .padding(.vertical)
@@ -62,10 +61,11 @@ struct DetailView: View {
             }
             .navigationBarBackButtonHidden()
             .navigationBarTitleDisplayMode(.inline)
-        }
     }
 }
 
 #Preview {
-    DetailView(passedValue: "Item 1")
+    NavigationStack {
+        DetailView(passedValue: "Item 1")
+    }
 }
