@@ -9,28 +9,33 @@ import SwiftUI
 
 struct ToDoListView: View {
     @State private var sheetIsPresented = false
-    
-    @State private var toDos = ["Learn Swift",
-                                "Buils Apps",
-                                "Change the world",
-                                "Bring the Awesome",
-                                "Take a vacation"]
+    @EnvironmentObject var toDosVM: ToDosViewModel
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(toDos, id: \.self) { toDo in
+                ForEach(toDosVM.toDos) { toDo in
                     NavigationLink {
-                        DetailView(passedValue: toDo)
+                        DetailView(toDo: toDo)
                     } label: {
-                        Text(toDo)
+                        Text(toDo.item)
                     }
                     .font(.title2)
+                }
+                .onDelete { indexSet in
+                    toDosVM.delete(indexSet: indexSet)
+                }
+                .onMove { fromOffsets, toOffset in
+                    toDosVM.move(fromOffsets: fromOffsets, toOffset: toOffset)
                 }
             }
             .navigationTitle("ToDoList")
             .listStyle(.plain)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         sheetIsPresented.toggle()
@@ -41,7 +46,7 @@ struct ToDoListView: View {
             }
             .sheet(isPresented: $sheetIsPresented) {
                 NavigationStack {
-                    DetailView(passedValue: "")
+                    DetailView(toDo: ToDo(), newToDo: true) // new value
                 }
             }
         }
@@ -50,4 +55,5 @@ struct ToDoListView: View {
 
 #Preview {
     ToDoListView()
+        .environmentObject(ToDosViewModel())
 }
