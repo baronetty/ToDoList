@@ -11,7 +11,6 @@ struct DetailView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var toDosVM: ToDosViewModel
     @State var toDo: ToDo
-    var newToDo = false
     
     var body: some View {
             List{
@@ -37,7 +36,7 @@ struct DetailView: View {
                     .textFieldStyle(.roundedBorder)
                     .listRowSeparator(.hidden)
                 
-                Toggle("Completed:", isOn: $toDo.isCompletet)
+                Toggle("Completed:", isOn: $toDo.isCompleted)
                     .padding(.top)
                     .listRowSeparator(.hidden)
             }
@@ -51,7 +50,7 @@ struct DetailView: View {
                 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        toDosVM.saveToDo(toDo: toDo, newToDo: newToDo)
+                        toDosVM.saveToDo(toDo: toDo)
                         dismiss()
                     }
                 }
