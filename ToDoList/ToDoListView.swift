@@ -5,20 +5,22 @@
 //  Created by Leo  on 12.01.24.
 //
 
+import SwiftData
 import SwiftUI
 
 struct ToDoListView: View {
+    @Environment(\.modelContext) var modelContext
     @State private var sheetIsPresented = false
-    @EnvironmentObject var toDosVM: ToDosViewModel
+    @Query var toDos: [ToDo]
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(toDosVM.toDos) { toDo in
+                ForEach(toDos) { toDo in
                     HStack {
                         Image(systemName: toDo.isCompleted ? "checkmark.rectangle" : "rectangle")
                             .onTapGesture {
-                                toDosVM.toggleCompleted(toDo: toDo)
+                                toDo.isCompleted.toggle()
                             }
                         
                         NavigationLink {
@@ -28,21 +30,16 @@ struct ToDoListView: View {
                         }
                     }
                     .font(.title2)
-                }
-                .onDelete { indexSet in
-                    toDosVM.deleteToDo(indexSet: indexSet)
-                }
-                .onMove { fromOffsets, toOffset in
-                    toDosVM.moveToDo(fromOffsets: fromOffsets, toOffset: toOffset)
+                    .swipeActions {
+                        Button("Delete", role: .destructive) {
+                            modelContext.delete(toDo)
+                        }
+                    }
                 }
             }
             .navigationTitle("ToDoList")
             .listStyle(.plain)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    EditButton()
-                }
-                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         sheetIsPresented.toggle()
@@ -62,5 +59,4 @@ struct ToDoListView: View {
 
 #Preview {
     ToDoListView()
-        .environmentObject(ToDosViewModel())
 }
