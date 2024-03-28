@@ -8,15 +8,36 @@
 import SwiftData
 import SwiftUI
 
-struct ToDoListView: View {
+enum SortOption: String, CaseIterable {
+    case asEntered = "As Entered"
+    case alphabetical = "A-Z"
+    case cheronological = "Date"
+    case completed = "Not Done"
+}
+
+struct SortedToDoList: View {
     @Environment(\.modelContext) var modelContext
-    @State private var sheetIsPresented = false
     @Query var toDos: [ToDo]
+    let sortSelection: SortOption
+    
+    init(sortSelection: SortOption) {
+        self.sortSelection = sortSelection
+        switch self.sortSelection {
+        case .asEntered:
+            _toDos = Query()
+        case .alphabetical:
+            _toDos = Query(sort: \.item)
+        case .cheronological:
+            _toDos = Query(sort: \.dueDate)
+        case .completed:
+            _toDos = Query(filter: #Predicate {$0.isCompleted == false })
+        }
+    }
     
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(toDos) { toDo in
+        List {
+            ForEach(toDos) { toDo in
+                VStack(alignment: .leading) {
                     HStack {
                         Image(systemName: toDo.isCompleted ? "checkmark.rectangle" : "rectangle")
                             .onTapGesture {
@@ -30,15 +51,36 @@ struct ToDoListView: View {
                         }
                     }
                     .font(.title2)
-                    .swipeActions {
-                        Button("Delete", role: .destructive) {
-                            modelContext.delete(toDo)
+                    HStack {
+                        Text(toDo.dueDate.formatted(date: .abbreviated, time: .shortened))
+                            .foregroundStyle(.secondary)
+                        
+                        if toDo.reminderIsOn {
+                            Image(systemName: "calendar.badge.clock")
+                                .symbolRenderingMode(.multicolor)
                         }
                     }
                 }
+                .swipeActions {
+                    Button("Delete", role: .destructive) {
+                        modelContext.delete(toDo)
+                    }
+                }
             }
+        }
+        .listStyle(.plain)
+    }
+}
+
+struct ToDoListView: View {
+    @State private var sheetIsPresented = false
+    @State private var sortSelection: SortOption = .asEntered
+    
+    
+    var body: some View {
+        NavigationStack {
+            SortedToDoList(sortSelection: sortSelection)
             .navigationTitle("ToDoList")
-            .listStyle(.plain)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -46,6 +88,15 @@ struct ToDoListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                }
+                
+                ToolbarItem(placement: .bottomBar) {
+                    Picker("Sort Options", selection: $sortSelection) {
+                        ForEach(SortOption.allCases, id: \.self) { sortOrder in
+                            Text(sortOrder.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                 }
             }
             .sheet(isPresented: $sheetIsPresented) {
@@ -59,4 +110,5 @@ struct ToDoListView: View {
 
 #Preview {
     ToDoListView()
+        .modelContainer(for: ToDo.self)
 }
